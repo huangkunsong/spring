@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- monitorInterval="30" -->
+<!--
+    日志级别：All < Trace < Debug < Info < Warn < Error < Fatal < OFF.
+    onMatch="ACCEPT" onMismatch="DENY"
+         控制台只输出level及以上级别的信息（onMatch），其他的直接拒绝（onMismatch）
+-->
+<!--
+    status : 指定log4j2本身的日志级别
+    monitorinterval : 指定监听配置文件刷新间隔,单位s
+ -->
+<Configuration status="WARN">
+    <properties>
+        <!--设置日志在硬盘上输出的目录-->
+        <property name="pattern">[DATABASE] %d{YYYY-MM-dd HH:mm:ss} [%t] [%-5p] %c{1}:%L - %msg%n</property>
+        <property name="logPath">${web:rootDir}/WEB-INF/logs</property>
+    </properties>
+
+    <Appenders>
+        <!--设置在控制台打印日志-->
+        <Console name="Console" target="SYSTEM_OUT">
+            <Filters>
+                <ThresholdFilter level="error" onMatch="DENY" onMismatch="NEUTRAL"/>
+                <ThresholdFilter level="trace" onMatch="ACCEPT" onMismatch="DENY"/>
+            </Filters>
+            <PatternLayout pattern="${pattern}"/>
+        </Console>
+
+        <!-- 记录所有日志,filepattern后缀可以配置zip压缩文件减少服务器储存空间 -->
+        <RollingFile name="root" filename="${logPath}/root.log"
+                     filepattern="${logPath}/%d{YYYYMMdd}/root/root-%i.log">
+            <PatternLayout pattern="${pattern}"/>
+            <!--控制台只输出level及以上级别的信息（onMatch），其他的直接拒绝（onMismatch）-->
+            <ThresholdFilter level="info" onMatch="ACCEPT" onMismatch="DENY"/>
+            <Policies>
+                <!--设置每天打包日志一次-->
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <!--设置日志文件满100MB后打包-->
+                <SizeBasedTriggeringPolicy size="100MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="100"/>
+        </RollingFile>
+
+        <!--设置级别为error日志输出到error.log中-->
+        <RollingFile name="error" filename="logs/error.log"
+                     filepattern="%d{YYYYMMdd}/error/error-%i.log">
+            <ThresholdFilter level="error" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout pattern="${pattern}"/>
+            <Policies>
+                <!--设置每天打包日志一次-->
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <!--设置日志文件满1MB后打包-->
+                <SizeBasedTriggeringPolicy size="100MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="100"/>
+        </RollingFile>
+
+        <!-- 后期改配置INFO,WARN 2个文件记录 -->
+        <!--设置INFO级别以上日志输出到other.log中-->
+        <RollingFile name="other" filename="logs/other.log"
+                     filepattern="%d{YYYYMMdd}/other/other-%i.log">
+            <!--设置只输出级别为INFO的日志-->
+            <Filters>
+                <ThresholdFilter level="error" onMatch="DENY" onMismatch="NEUTRAL"/>
+                <ThresholdFilter level="info" onMatch="ACCEPT" onMismatch="DENY"/>
+            </Filters>
+            <PatternLayout pattern="${pattern}"/>
+            <Policies>
+                <!--设置每天打包日志一次-->
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <!--设置日志文件满20MB后打包-->
+                <SizeBasedTriggeringPolicy size="100MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="100"/>
+        </RollingFile>
+
+        <!-- 记录所有SQL日志 -->
+        <RollingFile name="sql" filename="logs/sql.log"
+                     filepattern="%d{YYYYMMdd}/sql/sql-%i.log">
+            <PatternLayout pattern=""/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="100MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="100"/>
+        </RollingFile>
+    </Appenders>
+
+    <Loggers>
+        <!-- -->
+        <Logger name="com.hks" level="debug" additivity="true">
+            <!--
+                用来指定该日志输出到哪个Appender,
+                如果没有指定，就会默认继承自Root.
+                如果指定了，那么会在指定的这个Appender和Root的Appender中都会输出，
+                此时我们可以设置Logger的additivity="false"只在自定义的Appender中进行输出。
+            -->
+            <AppenderRef ref="other"/>
+            <AppenderRef ref="error"/>
+        </Logger>
+        <Logger name="java.sql.Connection" level="debug" additivity="true">
+            <AppenderRef ref="sql"/>
+        </Logger>
+        <Logger name="java.sql.PreparedStatement" level="debug" additivity="true">
+            <AppenderRef ref="sql"/>
+        </Logger>
+        <Logger name="java.sql.ResultSet" level="debug" additivity="true">
+            <AppenderRef ref="sql"/>
+        </Logger>
+        <Logger name="org.springframework.jdbc.datasource.DataSourceTransactionManager" level="debug" additivity="true">
+            <AppenderRef ref="sql"/>
+        </Logger>
+        <Logger name="org.springframework.transaction.jta.WebSphereUowTransactionManager" level="debug"
+                additivity="true">
+            <AppenderRef ref="sql"/>
+        </Logger>
+        <Logger name="java.sql.Statement" level="debug" additivity="true">
+            <AppenderRef ref="sql"/>
+        </Logger>
+        <Logger name="org.apche.ibatis" level="debug" additivity="true">
+            <AppenderRef ref="sql"/>
+        </Logger>
+        <Logger name="org.mybatis.spring" level="debug" additivity="true">
+            <AppenderRef ref="sql"/>
+        </Logger>
+
+        <Logger name="org.springframework" level="info"/>
+        <Logger name="org.apache.commons" level="info"/>
+        <Logger name="org.apache.cxf.com.hks.configuration.spring" level="info"/>
+        <Logger name="net.sf.ehcache" level="info"/>
+        <Logger name="org.apache.cxf" level="info"/>
+        <Logger name="httpclient.wire" level="info"/>
+
+        <Root level="debug">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="root"/>
+        </Root>
+    </Loggers>
+</Configuration>

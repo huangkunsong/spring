@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- monitorInterval="30" -->
+<!--
+    日志级别：All < Trace < Debug < Info < Warn < Error < Fatal < OFF.
+    onMatch="ACCEPT" onMismatch="DENY"
+-->
+<!--
+    status : 指定log4j2本身的日志级别
+    monitorinterval : 指定监听配置文件刷新间隔,单位s
+ -->
+<Configuration status="WARN" monitorinterval="5">
+    <properties>
+        <!--设置日志在硬盘上输出的目录-->
+        <property name="pattern">%d{YYYY-MM-dd HH:mm:ss} [%t] %-5p %c{1}:%L - %msg%n</property>
+        <property name="logPath">${web:rootDir}/WEB-INF/logs</property>
+    </properties>
+
+    <Appenders>
+        <!--设置在控制台打印日志-->
+        <Console name="console" target="SYSTEM_OUT">
+            <PatternLayout pattern="${pattern}"/>
+        </Console>
+
+        <!-- 记录所有日志,filepattern后缀可以配置zip压缩文件减少服务器储存空间 -->
+        <RollingFile name="root" filename="${logPath}/root.log"
+                     filepattern="${logPath}/%d{YYYYMMdd}/root/root-%i.log">
+            <PatternLayout pattern="${pattern}"/>
+            <!--控制台只输出level及以上级别的信息（onMatch），其他的直接拒绝（onMismatch）-->
+            <Filters>
+                <ThresholdFilter level="info" onMatch="ACCEPT" onMismatch="DENY"/>
+            </Filters>
+            <Policies>
+                <!--设置每天打包日志一次-->
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <!--设置日志文件满100MB后打包-->
+                <SizeBasedTriggeringPolicy size="100MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="100"/>
+        </RollingFile>
+
+        <!--设置级别为error日志输出到error.log中-->
+        <RollingFile name="error" filename="${logPath}/error.log"
+                     filepattern="%d{YYYYMMdd}/error/error-%i.log">
+            <PatternLayout pattern="${pattern}"/>
+            <Filters>
+                <ThresholdFilter level="error" onMatch="ACCEPT" onMismatch="DENY"/>
+            </Filters>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="100MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="100"/>
+        </RollingFile>
+
+        <!--设置INFO级别以上日志输出到other.log中-->
+        <RollingFile name="other" filename="${logPath}/other.log"
+                     filepattern="%d{YYYYMMdd}/other/other-%i.log">
+            <Filters>
+                <ThresholdFilter level="error" onMatch="DENY" onMismatch="NEUTRAL"/>
+                <ThresholdFilter level="info" onMatch="ACCEPT" onMismatch="DENY"/>
+            </Filters>
+            <PatternLayout pattern="${pattern}"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="100MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="100"/>
+        </RollingFile>
+
+    </Appenders>
+
+    <Loggers>
+        <logger name="org.springframework.web" level="info" additivity="false">
+            <appenderRef ref="console"/>
+        </logger>
+        <Logger name="net.sf.ehcache" level="debug" additivity="false">
+            <AppenderRef ref="console" />
+        </Logger>
+        <Logger name="com.hks.dao" level="TRACE" additivity="false">
+            <AppenderRef ref="console" />
+        </Logger>
+        <Logger name="org.springframework" level="info" additivity="false">
+            <AppenderRef ref="console" />
+        </Logger>
+        <Root level="debug">
+            <AppenderRef ref="console"/>
+            <AppenderRef ref="other" />
+            <AppenderRef ref="error" />
+            <AppenderRef ref="root" />
+        </Root>
+    </Loggers>
+</Configuration>
