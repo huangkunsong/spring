@@ -1,9 +1,11 @@
 package com.hks.entity;
 
+import java.io.Serializable;
+
 /**
  * @author Huangkunsong
  */
-public class User {
+public class User implements Serializable{
     private int id;
     private String userName;
     private String passWord;

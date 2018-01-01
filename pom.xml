@@ -84,6 +84,13 @@
             <version>${spring.version}</version>
         </dependency>
 
+        <!-- spring jms -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jms</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+
         <!-- spring security -->
         <dependency>
             <groupId>org.springframework.security</groupId>
@@ -100,6 +107,7 @@
             <artifactId>spring-security-core</artifactId>
             <version>${spring.security.version}</version>
         </dependency>
+
 
         <!-- slf4j -->
         <dependency>
@@ -287,6 +295,13 @@
             <groupId>org.apache.activemq</groupId>
             <artifactId>activemq-spring</artifactId>
             <version>5.15.2</version>
+        </dependency>
+
+        <!-- alibaba json -->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+            <version>1.2.44</version>
         </dependency>
 
     </dependencies>
