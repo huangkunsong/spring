@@ -25,6 +25,10 @@ public class RabbitMQConfig {
     public static final String EXCHANGE_NAME   = "exchange";
     public static final String ROUTINGKEY = "routingKey";
 
+    /**
+     * 实例化链接工厂
+     * @return
+     */
     @Bean
     public ConnectionFactory connectionFactory() {
         CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
@@ -38,7 +42,12 @@ public class RabbitMQConfig {
         return connectionFactory;
     }
 
-    //必须是prototype类型
+    /**
+     * 实例化模板,用于发送和同步接收AMQP
+     * 必须是prototype类型
+     * @param connectionFactory
+     * @return
+     */
     @Bean
     @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
     public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
@@ -100,6 +109,10 @@ public class RabbitMQConfig {
         return BindingBuilder.bind(queue()).to(defaultExchange()).with(ROUTINGKEY);
     }
 
+    /**
+     * 异步AMQP消息监听器
+     * @return
+     */
     @Bean
     public SimpleMessageListenerContainer messageContainer() {
         SimpleMessageListenerContainer container = new SimpleMessageListenerContainer(connectionFactory());
