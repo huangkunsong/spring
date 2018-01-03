@@ -42,7 +42,11 @@ public class RabbitMQConfig {
     @Bean
     @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
     public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
-        return new RabbitTemplate(connectionFactory);
+        RabbitTemplate template = new RabbitTemplate(connectionFactory);
+        //设置默认属性
+        template.setEncoding(EXCHANGE_NAME);
+        template.setRoutingKey(ROUTINGKEY);
+        return template;
     }
 
     /**
