@@ -18,7 +18,7 @@ import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
 
 /*@Configuration*/
-public class JmsConfig {
+public class ActiveMQConfig {
 
     @Bean
     public ConnectionFactory mqFactory() {

@@ -1,5 +1,6 @@
 package com.hks.configuration;
 
+import com.rabbitmq.client.AMQP;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
@@ -11,18 +12,27 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 
+/**
+ * AMAP:
+ *      Produces  ->  exchange  -> bindings  -> queue  -> consumer
+ *      嵌套exchange
+ *      Produces  ->  exchange  -> exchange  -> bindings  -> queue  -> consumer
+ *
+ */
 @Configuration
 public class RabbitMQConfig {
 
-    public static final String EXCHANGE   = "exchange";
+    public static final String EXCHANGE_NAME   = "exchange";
     public static final String ROUTINGKEY = "routingKey";
 
     @Bean
     public ConnectionFactory connectionFactory() {
         CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
-        connectionFactory.setAddresses("127.0.0.1:15672");
+        connectionFactory.setAddresses("127.0.0.1");
         connectionFactory.setUsername("guest");
         connectionFactory.setPassword("guest");
+        connectionFactory.setPort(AMQP.PROTOCOL.PORT);
+        //设置分组
         connectionFactory.setVirtualHost("/");
         connectionFactory.setPublisherConfirms(true);
         return connectionFactory;
@@ -36,24 +46,51 @@ public class RabbitMQConfig {
     }
 
     /**
-     * 针对消费者配置
-     * 1. 设置交换机类型
-     * 2. 将队列绑定到交换机
-     *      FanoutExchange: 将消息分发到所有的绑定队列，无routingkey的概念
+     * 实例化一个exchange
+     *      FanoutExchange:
+     *              将消息分发到所有的绑定队列，无routingkey的概念
+     *      DirectExchange:
+     *              produces指定的routingkey要和
+     *              bingding的bingdingkey一致才会发送到绑定的队列
+     *      TopicExchange:
+     *              produces指定的routingkey要和
+     *              bingding的bingdingkey一致才会发送到绑定的队列
+     *              bingding支持通配符模式
+     *                  #：表示0个或多个单词
+     *                  *：表示一个单词
+     *              routingkey :  123.123.21.1
+     *              bindingkey :  123.#匹配
+     *                            123#不匹配  要有一个.
+     *                            123.123.*  不匹配,*只表示一个单词
      *      HeadersExchange ：通过添加属性key-value匹配
-     *      DirectExchange:按照routingkey分发到指定队列
-     *      TopicExchange:多关键字匹配
+     *              Headers类型的exchange使用的比较少,它也是忽略routingKey的一种路由方式。
+     *              是使用Headers来匹配的.Headers是一个键值对,可以定义成Hashtable.
+     *              发送者在发送的时候定义一些键值对,接收者也可以再绑定时候传入一些键值对,
+     *              两者匹配的话,则对应的队列就可以收到消息。
+     *              匹配有两种方式all和any.
+     *              这两种方式是在接收端必须要用键值"x-mactch"来定义.
+     *              all代表定义的多个键值对都要满足0,而any则代码只要满足一个就可以了.
+     *              fanout,direct,topic exchange的routingKey都需要要字符串形式的,
+     *              而headers exchange则没有这个要求,因为键值对的值可以是任何类型。
      */
     @Bean
     public DirectExchange defaultExchange() {
-        return new DirectExchange(EXCHANGE);
+        return new DirectExchange(EXCHANGE_NAME);
     }
 
+    /**
+     * 实例化一个队列
+     * @return
+     */
     @Bean
     public Queue queue() {
         return new Queue("queue", true);
     }
 
+    /**
+     * 将queue和exchange进行绑定
+     * @return
+     */
     @Bean
     public Binding binding() {
         return BindingBuilder.bind(queue()).to(defaultExchange()).with(ROUTINGKEY);
