@@ -1,6 +1,5 @@
 package com.hks.configuration;
 
-import com.hks.JMS.JmsMiddle;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.spring.ActiveMQConnectionFactory;
@@ -14,8 +13,7 @@ import org.springframework.jms.support.converter.MappingJackson2MessageConverter
 import org.springframework.jms.support.converter.MessageConverter;
 import org.springframework.jms.support.converter.MessageType;
 
-import javax.jms.ConnectionFactory;
-import javax.jms.Destination;
+import javax.jms.*;
 
 /*@Configuration*/
 public class ActiveMQConfig {
@@ -59,27 +57,33 @@ public class ActiveMQConfig {
     @Bean
     public DefaultMessageListenerContainer queueJmsListener(
         ConnectionFactory factory,
-        JmsMiddle jms,
         ActiveMQQueue queue) {
-        return listenerContainer(factory, jms, queue);
+        return listenerContainer(factory, queue);
     }
 
     @Bean
     public DefaultMessageListenerContainer topicJmsListener(
         ConnectionFactory factory,
-        JmsMiddle jms,
         ActiveMQTopic topic) {
-        return listenerContainer(factory, jms, topic);
+        return listenerContainer(factory, topic);
     }
 
     @NotNull
     private DefaultMessageListenerContainer listenerContainer(
         ConnectionFactory factory,
-        JmsMiddle jms,
         Destination destination) {
         DefaultMessageListenerContainer dmlc = new DefaultMessageListenerContainer();
         MessageListenerAdapter listener = new MessageListenerAdapter();
-        listener.setDelegate(jms);
+        listener.setDelegate((MessageListener)(Message message) -> {
+            try {
+                if (message instanceof TextMessage) {
+                    System.out.println(((TextMessage)message).getText());
+                } else if (message instanceof MapMessage) {
+                    MapMessage mmsg = (MapMessage) message;
+                }
+            } catch (JMSException e) {
+            }
+        });
         dmlc.setMessageListener(listener);
         dmlc.setConnectionFactory(factory);
         dmlc.setDestination(destination);
