@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * AMAP:
+ * AMQP:
  * Produces  ->  exchange  -> bindings  -> queue  -> consumer
  * 嵌套exchange
  * Produces  ->  exchange  -> exchange  -> bindings  -> queue  -> consumer

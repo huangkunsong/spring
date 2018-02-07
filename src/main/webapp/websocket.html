@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Web Socket</title>
+</head>
+<body>
+<script src="static/js/lib/sockjs.min.js"></script>
+<script src="static/js/lib/stomp.js"></script>
+<textarea id="message" ></textarea><br>
+<input type="button" value="Send Message" onclick="sendMessage()">
+<input type="button" value="Send Message" onclick="sayHi()">
+<div id="messageDiv" />
+</body>
+<script>
+    function appendPChild(text) {
+        const p = document.createElement("p");
+        p.innerText = text;
+        document.querySelector("#messageDiv").appendChild(p);
+    }
+
+    const socket = new SockJS("/socket");
+    const stomp = Stomp.over(socket);
+
+    const headers={
+        username:'guest',
+        password:'guest'
+    };
+    stomp.connect(headers, function () {
+        appendPChild("Web Socket Stomp connect success.");
+        subscribeOperation();
+
+    });
+
+    function subscribeOperation(){
+        stomp.subscribe("/topic/topicUser" , function(reponseFrame){
+            appendPChild("服务端回复：" + reponseFrame.body);
+        });
+
+        stomp.subscribe("/topic/hi" , function(reponseFrame){
+            appendPChild("服务端回复：" + reponseFrame.body);
+        });
+    }
+
+    function sendMessage(msg) {
+        const messageValue = typeof msg === "string" ? msg : document.querySelector("#message").value;
+        const message = JSON.stringify({message : messageValue});
+        appendPChild("客户端发送：" + message);
+        stomp.send("/app/user", {}, message);
+    }
+
+    function sayHi() {
+        const message = JSON.stringify({message : "hi,browser"});
+        appendPChild("客户端发送：" + message);
+        stomp.send("/app/hi", {simpUser : "aa",user:"aaa"}, message);
+    }
+</script>
+</html>
